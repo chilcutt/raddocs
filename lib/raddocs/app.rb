@@ -3,6 +3,14 @@ module Raddocs
     set :haml, :format => :html5
     set :root, File.join(File.dirname(__FILE__), "..")
 
+    use Rack::Auth::Basic, "Restricted Area" do |username, password|
+      if Raddocs.configuration.use_http_basic_auth
+        username == Raddocs.configuration.http_basic_auth_username and password == Raddocs.configuration.http_basic_auth_password
+      else
+        true
+      end
+    end
+
     get "/" do
       index = JSON.parse(File.read("#{docs_dir}/index.json"))
       haml :index, :locals => { :index => index }

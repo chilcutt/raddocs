@@ -18,6 +18,9 @@ module Raddocs
     add_setting :api_name, :default => "Api Documentation"
     add_setting :include_bootstrap, :default => true
     add_setting :external_css, :default => []
+    add_setting :use_http_basic_auth, :default => false
+    add_setting :http_basic_auth_username, :default => ''
+    add_setting :http_basic_auth_password, :default => ''
 
     def settings
       @settings ||= {}
