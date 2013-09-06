@@ -21,6 +21,11 @@ module Raddocs
     add_setting :use_http_basic_auth, :default => false
     add_setting :http_basic_auth_username, :default => ''
     add_setting :http_basic_auth_password, :default => ''
+    add_setting :aws_storage, :default => false
+    add_setting :aws_access_key_id, :default => ''
+    add_setting :aws_secret_access_key, :default => ''
+    add_setting :aws_s3_bucket, :default => ''
+    add_setting :aws_s3_file_prefix, :default => 'docs'
 
     def settings
       @settings ||= {}

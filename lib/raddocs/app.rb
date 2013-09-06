@@ -12,7 +12,7 @@ module Raddocs
     end
 
     get "/" do
-      index = JSON.parse(File.read("#{docs_dir}/index.json"))
+      index = JSON.parse(index_json)
       haml :index, :locals => { :index => index }
     end
 
@@ -28,15 +28,7 @@ module Raddocs
     end
 
     get "/*" do
-      file = "#{docs_dir}/#{params[:splat][0]}.json"
-
-      if !File.exists?(file)
-        raise Sinatra::NotFound
-      end
-
-      file_content = File.read(file)
-
-      example = JSON.parse(file_content)
+      example = JSON.parse(file_json)
       example["parameters"] = Parameters.new(example["parameters"]).parse
       haml :example, :locals => { :example => example }
     end
@@ -78,6 +70,42 @@ module Raddocs
 
     def docs_dir
       Raddocs.configuration.docs_dir
+    end
+
+    def s3_file_prefix
+      Raddocs.configuration.aws_s3_file_prefix
+    end
+
+    def index_json
+      if Raddocs.configuration.aws_storage
+        aws_directory.files.get("#{s3_file_prefix}/index.json").body
+      else
+        File.read("#{docs_dir}/index.json")
+      end
+    end
+
+    def file_json
+      if Raddocs.configuration.aws_storage
+        file = "#{s3_file_prefix}/#{params[:splat][0]}.json"
+        aws_file = aws_directory.files.get(file)
+        if !aws_file
+          raise Sinatra::NotFound
+        end
+        aws_file.body
+      else
+        file = "#{docs_dir}/#{params[:splat][0]}.json"
+        if !File.exists?(file)
+          raise Sinatra::NotFound
+        end
+        File.read(file)
+      end
+    end
+
+    def aws_directory
+      @aws_storage ||= Fog::Storage.new(:aws_access_key_id => Raddocs.configuration.aws_access_key_id,
+                                        :aws_secret_access_key => Raddocs.configuration.aws_secret_access_key,
+                                        :provider => 'AWS')
+      @aws_directory ||= @aws_storage.directories.get(Raddocs.configuration.aws_s3_bucket)
     end
   end
 end
